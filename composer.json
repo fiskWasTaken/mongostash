@@ -1,0 +1,29 @@
+{
+  "name": "fiskie/stash-mongodb",
+  "description": "MongoDB Driver for Stash.",
+  "keywords": [
+    "cache",
+    "caching",
+    "mongodb",
+    "mongo",
+    "stash"
+  ],
+  "homepage": "http://github.com/fiskie/stash-mongodb",
+  "type": "library",
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Fiskie",
+      "email": "myself@fiskie.me"
+    }
+  ],
+  "require": {
+    "php": "^5.4|^7.0",
+    "tedivm/stash": "v0.13.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "\\MongoStash": "src/MongoStash"
+    }
+  }
+}

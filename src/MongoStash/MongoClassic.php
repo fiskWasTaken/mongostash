@@ -7,12 +7,12 @@ use Stash\Exception\InvalidArgumentException;
 
 
 /**
- * Supports the classic Mongo PHP driver; the MongoClient class. Stores persistent cache to MongoDb, which can be a
+ * Supports the classic Mongo PHP driver, the MongoClient class. Stores persistent cache to MongoDB, which can be a
  * good option for a distributed cache.
  *
  * @package MongoStash
  */
-class LegacyMongoClient extends AbstractDriver {
+class MongoClassic extends AbstractDriver {
     /**
      * @var \MongoCollection
      */
@@ -53,7 +53,7 @@ class LegacyMongoClient extends AbstractDriver {
         if (!$key)
             return $this->purge();
 
-        $this->__collection->remove(['_id' => new \MongoRegex("^" . preg_quote(self::mapKey($key)))]);
+        $this->__collection->remove(['_id' => new \MongoRegex("^" . preg_quote(self::mapKey($key)))], ['multiple' => true]);
         return true;
     }
 
@@ -88,9 +88,6 @@ class LegacyMongoClient extends AbstractDriver {
 
         if (!$options['collection'] instanceof \MongoCollection)
             throw new InvalidArgumentException("collection is a required parameter and must be an instance of MongoCollection.");
-
-        if (!is_string($options['collection']))
-            throw new InvalidArgumentException("The collection parameter must be a string if it is set.");
 
         $this->__collection = $options['collection'];
     }

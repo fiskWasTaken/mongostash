@@ -12,7 +12,7 @@ use Stash\Exception\InvalidArgumentException;
  *
  * @package MongoStash
  */
-class MongoLegacy extends AbstractDriver {
+class LegacyMongoClient extends AbstractDriver {
     /**
      * @var \MongoCollection
      */
@@ -72,14 +72,12 @@ class MongoLegacy extends AbstractDriver {
     public function getDefaultOptions()
     {
         return array(
-            'client' => null,
-            'collection' => 'stash.store'
+            'collection' => null
         );
     }
 
     /**
-     * client - a MongoClient instance. Required.
-     * collection - a collection to use for the Stash store. Default: stash.store
+     * collection - A MongoCollection instance. Required.
      *
      * @param array $options
      * @throws InvalidArgumentException
@@ -88,13 +86,13 @@ class MongoLegacy extends AbstractDriver {
     {
         $options += $this->getDefaultOptions();
 
-        if (!$options['client'] instanceof \MongoClient)
-            throw new InvalidArgumentException("client is a required parameter and must be an instance of MongoClient.");
+        if (!$options['collection'] instanceof \MongoCollection)
+            throw new InvalidArgumentException("collection is a required parameter and must be an instance of MongoCollection.");
 
         if (!is_string($options['collection']))
             throw new InvalidArgumentException("The collection parameter must be a string if it is set.");
 
-        $this->__collection = $options['client']->selectCollection($options['collection']);
+        $this->__collection = $options['collection'];
     }
 
     /**
@@ -102,7 +100,7 @@ class MongoLegacy extends AbstractDriver {
      */
     public static function isAvailable()
     {
-        return class_exists('\MongoClient', false);
+        return class_exists('\MongoCollection', false);
     }
 
     /**

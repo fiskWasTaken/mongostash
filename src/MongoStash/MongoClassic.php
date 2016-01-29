@@ -62,7 +62,7 @@ class MongoClassic extends AbstractDriver {
      */
     public function purge()
     {
-        $this->__collection->remove(['expiration' => ['$gte' => time()]], ['multiple' => true]);
+        $this->__collection->remove(['expiration' => ['$lte' => time()]], ['multiple' => true]);
         return true;
     }
 

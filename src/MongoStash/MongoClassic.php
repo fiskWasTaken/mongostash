@@ -34,7 +34,7 @@ class MongoClassic extends AbstractDriver {
     {
         $doc = $this->__collection->findOne(['_id' => self::mapKey($key)]);
 
-        return $doc ? unserialize($doc['data']) : false;
+        return $doc ? ['data' => unserialize($doc['data']), 'expiration' => $doc['expiration']] : false;
     }
 
     /**

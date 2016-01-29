@@ -4,12 +4,9 @@ A simple MongoDB Driver for Stash, supporting MongoClient and the new-style Mong
 
 ## Usage
 
-    use MongoStash\MongoClassic;
-    use Stash\Pool;
-    
     $mongo = new \MongoClient(); // Whatever it is you are doing to create your Mongo client instance
     
-    $pool = new Pool(new MongoClassic([
+    $pool = new \Stash\Pool(new \MongoStash\MongoDB([
         'mongo' => $mongo,
         'database' => 'local',
         'collection' => 'stash.store'

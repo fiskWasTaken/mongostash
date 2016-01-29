@@ -51,8 +51,10 @@ class MongoClassic extends AbstractDriver {
      */
     public function clear($key = null)
     {
-        if (!$key)
-            return $this->purge();
+        if (!$key) {
+            $this->__collection->drop();
+            return true;
+        }
 
         $this->__collection->remove(['_id' => new \MongoRegex("^" . preg_quote(self::mapKey($key)))], ['multiple' => true]);
         return true;

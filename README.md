@@ -1,6 +1,6 @@
 # MongoDB Driver for Stash 
 
-A simple MongoDB Driver for Stash. Currently only supports the MongoClient library (mongo-php-driver-legacy). Support for mongo-php-library will be added when that library is more feature-complete and stable.
+A simple MongoDB Driver for Stash, supporting MongoClient and the new-style MongoDB library.
 
 ## Usage
 

@@ -43,6 +43,7 @@ class MongoClassic extends AbstractDriver {
     public function storeData($key, $data, $expiration)
     {
         $this->__collection->save(['_id' => self::mapKey($key), 'data' => serialize($data), 'expiration' => $expiration]);
+        return true;
     }
 
     /**

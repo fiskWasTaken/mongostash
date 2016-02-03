@@ -44,7 +44,11 @@ class MongoDB extends AbstractDriver {
         if ($this->collection instanceof \MongoDB\Collection) {
             $this->collection->insertOne(['_id' => self::mapKey($key), 'data' => serialize($data), 'expiration' => $expiration]);
         } else {
-            $this->collection->save(['_id' => self::mapKey($key), 'data' => serialize($data), 'expiration' => $expiration]);
+            try {
+                $this->collection->save(['_id' => self::mapKey($key), 'data' => serialize($data), 'expiration' => $expiration]);
+            } catch (\MongoDuplicateKeyException $ignored) {
+                // Because it's Mongo, we might have had this problem because of a cache stampede
+            }
         }
         return true;
     }

@@ -42,7 +42,10 @@ class MongoDB extends AbstractDriver {
     public function storeData($key, $data, $expiration)
     {
         if ($this->collection instanceof \MongoDB\Collection) {
-            $this->collection->insertOne(['_id' => self::mapKey($key), 'data' => serialize($data), 'expiration' => $expiration]);
+            $id = self::mapKey($key);
+            $this->collection->replaceOne(['_id' => $id],[
+                '_id' => $id, 'data' => serialize($data), 'expiration' => $expiration
+            ], ['upsert' => true]);
         } else {
             try {
                 $this->collection->save(['_id' => self::mapKey($key), 'data' => serialize($data), 'expiration' => $expiration]);

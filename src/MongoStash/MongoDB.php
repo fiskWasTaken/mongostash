@@ -43,9 +43,14 @@ class MongoDB extends AbstractDriver {
     {
         if ($this->collection instanceof \MongoDB\Collection) {
             $id = self::mapKey($key);
-            $this->collection->replaceOne(['_id' => $id],[
-                '_id' => $id, 'data' => serialize($data), 'expiration' => $expiration
-            ], ['upsert' => true]);
+
+            try {
+                $this->collection->replaceOne(['_id' => $id],[
+                    '_id' => $id, 'data' => serialize($data), 'expiration' => $expiration
+                ], ['upsert' => true]);
+            } catch (\MongoDB\Driver\Exception\BulkWriteException $ignored) {
+                // As of right now, BulkWriteException can be thrown by replaceOne in high-throughput environments where race conditions can occur
+            }
         } else {
             try {
                 $this->collection->save(['_id' => self::mapKey($key), 'data' => serialize($data), 'expiration' => $expiration]);
@@ -67,7 +72,7 @@ class MongoDB extends AbstractDriver {
         }
 
         if ($this->collection instanceof \MongoDB\Collection) {
-            $this->collection->deleteMany(['_id' => new \MongoDB\BSON\Regex("^" . preg_quote(self::mapKey($key)))]);
+            $this->collection->deleteMany(['_id' => new \MongoDB\BSON\Regex("^" . preg_quote(self::mapKey($key)), '')]);
         } else {
             $this->collection->remove(['_id' => new \MongoRegex("^" . preg_quote(self::mapKey($key)))], ['multiple' => true]);
         }

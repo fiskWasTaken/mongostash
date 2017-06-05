@@ -7,7 +7,8 @@ use Stash\Exception\InvalidArgumentException;
 
 
 /**
- * Supports the classic Mongo PHP driver, the MongoClient class. Stores persistent cache to MongoDB, which can be a
+ * Supports the classic Mongo PHP driver, the MongoClient class.
+ * Stores persistent cache to MongoDB, which can be a
  * good option for a distributed cache.
  *
  * @package MongoStash
@@ -33,7 +34,14 @@ class MongoDB extends AbstractDriver {
     public function getData($key)
     {
         $doc = $this->collection->findOne(['_id' => self::mapKey($key)]);
-        return $doc ? ['data' => unserialize($doc['data']), 'expiration' => $doc['expiration']] : false;
+        if ($doc) {
+            return [
+                'data' => unserialize($doc['data']),
+                'expiration' => $doc['expiration']
+            ];
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -46,16 +54,25 @@ class MongoDB extends AbstractDriver {
 
             try {
                 $this->collection->replaceOne(['_id' => $id],[
-                    '_id' => $id, 'data' => serialize($data), 'expiration' => $expiration
+                    '_id' => $id,
+                    'data' => serialize($data),
+                    'expiration' => $expiration
                 ], ['upsert' => true]);
             } catch (\MongoDB\Driver\Exception\BulkWriteException $ignored) {
-                // As of right now, BulkWriteException can be thrown by replaceOne in high-throughput environments where race conditions can occur
+                // As of right now, BulkWriteException can be thrown by
+                // replaceOne in high-throughput environments where race
+                // conditions can occur
             }
         } else {
             try {
-                $this->collection->save(['_id' => self::mapKey($key), 'data' => serialize($data), 'expiration' => $expiration]);
+                $this->collection->save([
+                    '_id' => self::mapKey($key),
+                    'data' => serialize($data),
+                    'expiration' => $expiration
+                ]);
             } catch (\MongoDuplicateKeyException $ignored) {
-                // Because it's Mongo, we might have had this problem because of a cache stampede
+                // Because it's Mongo, we might have had this problem because
+                // of a cache stampede
             }
         }
         return true;
@@ -71,10 +88,16 @@ class MongoDB extends AbstractDriver {
             return true;
         }
 
+        $preg = "^" . preg_quote(self::mapKey($key));
+
         if ($this->collection instanceof \MongoDB\Collection) {
-            $this->collection->deleteMany(['_id' => new \MongoDB\BSON\Regex("^" . preg_quote(self::mapKey($key)), '')]);
+            $this->collection->deleteMany([
+                '_id' => new \MongoDB\BSON\Regex($preg, '')
+            ]);
         } else {
-            $this->collection->remove(['_id' => new \MongoRegex("^" . preg_quote(self::mapKey($key)))], ['multiple' => true]);
+            $this->collection->remove([
+                '_id' => new \MongoRegex($preg)
+            ], ['multiple' => true]);
         }
         return true;
     }
@@ -85,9 +108,13 @@ class MongoDB extends AbstractDriver {
     public function purge()
     {
         if ($this->collection instanceof \MongoDB\Collection) {
-            $this->collection->deleteMany(['expiration' => ['$lte' => time()]]);
+            $this->collection->deleteMany([
+                'expiration' => ['$lte' => time()]
+            ]);
         } else {
-            $this->collection->remove(['expiration' => ['$lte' => time()]], ['multiple' => true]);
+            $this->collection->remove([
+                'expiration' => ['$lte' => time()]
+            ], ['multiple' => true]);
         }
 
         return true;
@@ -106,7 +133,7 @@ class MongoDB extends AbstractDriver {
     }
 
     /**
-     * collection - A MongoCollection instance. Required.
+     * mongo - A MongoClient/Mongo/MongoDB instance. Required.
      *
      * @param array $options
      * @throws InvalidArgumentException
@@ -115,11 +142,22 @@ class MongoDB extends AbstractDriver {
     {
         $options += $this->getDefaultOptions();
 
-        if (!($options['mongo'] instanceof \MongoClient || $options['mongo'] instanceof \Mongo || $options['mongo'] instanceof \MongoDB\Client)) {
-            throw new \InvalidArgumentException('MongoClient, Mongo or MongoDB\Client instance required');
+        $client = $options['mongo'];
+
+        if (!($client instanceof \MongoClient ||
+            $client instanceof \Mongo ||
+            $client instanceof \MongoDB\Client)) {
+            $err = 'MongoClient, Mongo or MongoDB\Client instance required';
+            throw new \InvalidArgumentException($err);
         }
 
-        $this->collection = $options['mongo']->selectCollection($options['database'], $options['collection']);
+        $db = $options['database'];
+        $collection = $options['collection'];
+
+        if ($db === null)
+            throw new \InvalidArgumentException("A database is required.");
+
+        $this->collection = $client->selectCollection($db, $collection);
     }
 
     /**
@@ -127,7 +165,8 @@ class MongoDB extends AbstractDriver {
      */
     public static function isAvailable()
     {
-        return class_exists('\MongoDB\Client', false) || class_exists('\MongoClient', false);
+        return class_exists('\MongoDB\Client', false) ||
+            class_exists('\MongoClient', false);
     }
 
     /**
